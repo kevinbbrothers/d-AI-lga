@@ -1,12 +1,68 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading;
 
-namespace dAIlga
+namespace EmulatorBot
 {
+    /// <summary>A single step: which key, how long to hold it, and how long to wait after.</summary>
+    public class RoutingStep
+    {
+        public string Key { get; set; } = "";
+        public int DurationMs { get; set; } = 100;
+        public int DelayAfterMs { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// A named, loadable/saveable sequence of key presses for one section of the game
+    /// (e.g. "IntroToFirstBattle"). Load a JSON file and call Execute() to replay it.
+    /// </summary>
+    public class RoutingNugget
+    {
+        public string Name { get; set; } = "";
+        public List<RoutingStep> Steps { get; set; } = new();
+
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true
+        };
+
+        public static RoutingNugget Load(string filePath)
+        {
+            string json = File.ReadAllText(filePath);
+            return JsonSerializer.Deserialize<RoutingNugget>(json, JsonOptions)
+                   ?? throw new InvalidDataException($"Could not parse routing nugget: {filePath}");
+        }
+
+        public void Save(string filePath)
+        {
+            File.WriteAllText(filePath, JsonSerializer.Serialize(this, JsonOptions));
+        }
+
+        /// <summary>Plays back every step in order via InputSimulator.</summary>
+        public void Execute()
+        {
+            foreach (RoutingStep step in Steps)
+            {
+                if (!Enum.TryParse<InputSimulator.Key>(step.Key, ignoreCase: true, out var key))
+                {
+                    Console.WriteLine($"Skipping unknown key '{step.Key}' in nugget '{Name}'.");
+                    continue;
+                }
+
+                InputSimulator.PressKey(key, step.DurationMs);
+
+                if (step.DelayAfterMs > 0)
+                    Thread.Sleep(step.DelayAfterMs);
+            }
+        }
+    }
+
     /// <summary>
     /// Captures the emulator window, reads pixel colors, and simulates key presses.
     /// No memory access — input via SendInput, state via screen pixels only.
@@ -28,6 +84,9 @@ namespace dAIlga
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
         [StructLayout(LayoutKind.Sequential)]
         private struct RECT { public int Left, Top, Right, Bottom; }
 
@@ -40,7 +99,14 @@ namespace dAIlga
             return FindWindow(null, windowTitle);
         }
 
-        public static void Focus(IntPtr hWnd) => SetForegroundWindow(hWnd);
+        /// <summary>Attempts to focus the window and returns whether it actually took —
+        /// SetForegroundWindow can fail silently, so don't trust it without checking.</summary>
+        public static bool Focus(IntPtr hWnd)
+        {
+            SetForegroundWindow(hWnd);
+            Thread.Sleep(100);
+            return GetForegroundWindow() == hWnd;
+        }
 
         /// <summary>
         /// Captures the CLIENT area of the window (excludes title bar/borders), so pixel
@@ -79,6 +145,11 @@ namespace dAIlga
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
+        [DllImport("user32.dll")]
+        private static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        private const uint MAPVK_VK_TO_VSC = 0;
+
         [StructLayout(LayoutKind.Sequential)]
         private struct INPUT
         {
@@ -104,6 +175,12 @@ namespace dAIlga
 
         private const uint INPUT_KEYBOARD = 1;
         private const uint KEYEVENTF_KEYUP = 0x0002;
+        private const uint KEYEVENTF_SCANCODE = 0x0008;
+        private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+
+        // Arrow keys (and a few others) are "extended" keys on the keyboard's second scan code set.
+        private static bool IsExtendedKey(ushort vk) =>
+            vk is 0x25 or 0x26 or 0x27 or 0x28; // Left, Up, Right, Down
 
         /// <summary>
         /// Common virtual-key codes for DeSmuME default bindings — adjust to match your config.
@@ -122,6 +199,11 @@ namespace dAIlga
 
         private static void SendKeyEvent(ushort vk, bool keyDown)
         {
+            ushort scanCode = (ushort)MapVirtualKey(vk, MAPVK_VK_TO_VSC);
+            uint flags = KEYEVENTF_SCANCODE | (keyDown ? 0 : KEYEVENTF_KEYUP);
+            if (IsExtendedKey(vk))
+                flags |= KEYEVENTF_EXTENDEDKEY;
+
             var input = new INPUT
             {
                 type = INPUT_KEYBOARD,
@@ -129,9 +211,9 @@ namespace dAIlga
                 {
                     ki = new KEYBDINPUT
                     {
-                        wVk = vk,
-                        wScan = 0,
-                        dwFlags = keyDown ? 0 : KEYEVENTF_KEYUP,
+                        wVk = 0,           // 0 when using KEYEVENTF_SCANCODE
+                        wScan = scanCode,
+                        dwFlags = flags,
                         time = 0,
                         dwExtraInfo = IntPtr.Zero
                     }
@@ -166,7 +248,8 @@ namespace dAIlga
                 return;
             }
 
-            WindowCapture.Focus(hWnd);
+            if (!WindowCapture.Focus(hWnd))
+                Console.WriteLine("Warning: could not confirm emulator window has focus. Click it manually and re-run.");
             Thread.Sleep(300); // let focus settle before sending input
 
             // Example: move right, then read a pixel (e.g. an HP bar sample point)
@@ -184,6 +267,24 @@ namespace dAIlga
                     Color c = frame.GetPixel(x, 45);
                     Console.WriteLine($"  x={x}: R={c.R} G={c.G} B={c.B}");
                 }
+            }
+
+            // Example: load and play a routing nugget
+            // JSON format:
+            // {
+            //   "Name": "OpenPartyMenu",
+            //   "Steps": [
+            //     { "Key": "Start", "DurationMs": 100, "DelayAfterMs": 300 },
+            //     { "Key": "Down",  "DurationMs": 100, "DelayAfterMs": 150 },
+            //     { "Key": "A",     "DurationMs": 100, "DelayAfterMs": 500 }
+            //   ]
+            // }
+            string nuggetPath = "routes/TestMenuNugget.json";
+            if (File.Exists(nuggetPath))
+            {
+                RoutingNugget nugget = RoutingNugget.Load(nuggetPath);
+                Console.WriteLine($"Playing nugget: {nugget.Name} ({nugget.Steps.Count} steps)");
+                nugget.Execute();
             }
         }
     }

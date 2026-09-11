@@ -1,0 +1,9 @@
+{
+   "Name": "TestMenuNugget",
+   "Steps": [
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 1000 },
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 500 },
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 500 },
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 500 }
+   ]
+}
