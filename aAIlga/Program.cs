@@ -1,176 +1,190 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using System.Text;
+﻿using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using System.Threading;
 
-namespace PlatinumBot;
-
-internal static class Program
+namespace dAIlga
 {
-    private const int Port = 9999;
-
     /// <summary>
-    /// Addresses to stream out of the emulator, as name / absolute NDS address / type.
-    /// Start empty: the very first run should just prove the pipe works by echoing
-    /// the frame counter. Fill these in as you find them with BizHawk's RAM Search.
-    /// Types: u8 s8 u16 s16 u32 s32.
+    /// Captures the emulator window, reads pixel colors, and simulates key presses.
+    /// No memory access — input via SendInput, state via screen pixels only.
     /// </summary>
-    private static readonly Watch[] Watches =
-    [
-        // new Watch("playerX", 0x02100000, "u16"),
-        // new Watch("playerY", 0x02100004, "u16"),
-        // new Watch("mapId",   0x02100008, "u16"),
-    ];
-
-    private static void Main()
+    public static class WindowCapture
     {
-        var listener = new TcpListener(IPAddress.Loopback, Port);
-        listener.Start();
+        [DllImport("user32.dll")]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        Console.WriteLine($"Listening on 127.0.0.1:{Port}");
-        Console.WriteLine("Now launch: EmuHawk.exe --socket_ip=127.0.0.1 --socket_port=" + Port);
-        Console.WriteLine("then load lua/platinum_bridge.lua in the Lua Console.\n");
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
-        using var client = listener.AcceptTcpClient();
-        using var stream = client.GetStream();
-        Console.WriteLine("BizHawk connected.\n");
+        [DllImport("user32.dll")]
+        private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
-        var bot = new Bot();
-        var sentWatches = false;
-        string? lastPrinted = null;
+        [DllImport("user32.dll")]
+        private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
 
-        while (true)
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT { public int Left, Top, Right, Bottom; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT { public int X, Y; }
+
+        /// <summary>Find the emulator window by exact title (e.g. "DeSmuME"). Returns IntPtr.Zero if not found.</summary>
+        public static IntPtr FindEmulatorWindow(string windowTitle)
         {
-            var line = ReadMessage(stream);
-            if (line is null)
+            return FindWindow(null, windowTitle);
+        }
+
+        public static void Focus(IntPtr hWnd) => SetForegroundWindow(hWnd);
+
+        /// <summary>
+        /// Captures the CLIENT area of the window (excludes title bar/borders), so pixel
+        /// coordinates you hardcode will match what you see in the emulator's render area.
+        /// </summary>
+        public static Bitmap CaptureClientArea(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero)
+                throw new InvalidOperationException("Invalid window handle — did FindEmulatorWindow succeed?");
+
+            GetClientRect(hWnd, out RECT clientRect);
+            int width = clientRect.Right - clientRect.Left;
+            int height = clientRect.Bottom - clientRect.Top;
+
+            POINT topLeft = new POINT { X = 0, Y = 0 };
+            ClientToScreen(hWnd, ref topLeft);
+
+            var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(bmp))
             {
-                Console.WriteLine("\nBizHawk disconnected.");
-                break;
+                g.CopyFromScreen(topLeft.X, topLeft.Y, 0, 0, new Size(width, height));
+            }
+            return bmp;
+        }
+
+        /// <summary>Convenience: grab one pixel color without holding onto the full bitmap.</summary>
+        public static Color GetPixel(IntPtr hWnd, int x, int y)
+        {
+            using Bitmap bmp = CaptureClientArea(hWnd);
+            return bmp.GetPixel(x, y);
+        }
+    }
+
+    public static class InputSimulator
+    {
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct INPUT
+        {
+            public uint type;
+            public InputUnion U;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        private struct InputUnion
+        {
+            [FieldOffset(0)] public KEYBDINPUT ki;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct KEYBDINPUT
+        {
+            public ushort wVk;
+            public ushort wScan;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        private const uint INPUT_KEYBOARD = 1;
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+
+        /// <summary>
+        /// Common virtual-key codes for DeSmuME default bindings — adjust to match your config.
+        /// </summary>
+        public enum Key : ushort
+        {
+            Up = 0x26,
+            Down = 0x28,
+            Left = 0x25,
+            Right = 0x27,
+            A = 0x58,      // 'X' key, common DeSmuME default for A
+            B = 0x5A,      // 'Z' key, common DeSmuME default for B
+            Start = 0x0D,  // Enter
+            Select = 0x08  // Backspace
+        }
+
+        private static void SendKeyEvent(ushort vk, bool keyDown)
+        {
+            var input = new INPUT
+            {
+                type = INPUT_KEYBOARD,
+                U = new InputUnion
+                {
+                    ki = new KEYBDINPUT
+                    {
+                        wVk = vk,
+                        wScan = 0,
+                        dwFlags = keyDown ? 0 : KEYEVENTF_KEYUP,
+                        time = 0,
+                        dwExtraInfo = IntPtr.Zero
+                    }
+                }
+            };
+            SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
+        }
+
+        /// <summary>Press and release a key, holding for durationMs (default one emulator "tap").</summary>
+        public static void PressKey(Key key, int durationMs = 100)
+        {
+            SendKeyEvent((ushort)key, true);
+            Thread.Sleep(durationMs);
+            SendKeyEvent((ushort)key, false);
+        }
+
+        /// <summary>Hold a key down without releasing — call ReleaseKey manually.</summary>
+        public static void HoldKey(Key key) => SendKeyEvent((ushort)key, true);
+
+        public static void ReleaseKey(Key key) => SendKeyEvent((ushort)key, false);
+    }
+
+    internal class Program
+    {
+        private static void Main()
+        {
+            // Adjust to your emulator window's exact title (check Task Manager / Spy++ if unsure)
+            IntPtr hWnd = WindowCapture.FindEmulatorWindow("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum");
+            if (hWnd == IntPtr.Zero)
+            {
+                Console.WriteLine("Emulator window not found. Is it running?");
+                return;
             }
 
-            var state = GameState.Parse(line);
+            WindowCapture.Focus(hWnd);
+            Thread.Sleep(300); // let focus settle before sending input
 
-            // Only redraw when a watched value actually changed, or the console
-            // becomes the bottleneck at 60 reports/second.
-            if (state.Signature != lastPrinted)
+            // Example: move right, then read a pixel (e.g. an HP bar sample point)
+            InputSimulator.PressKey(InputSimulator.Key.Right, 150);
+            Thread.Sleep(200); // let the frame update
+
+            Color pixel = WindowCapture.GetPixel(hWnd, 120, 45);
+            Console.WriteLine($"Pixel at (120,45): R={pixel.R} G={pixel.G} B={pixel.B}");
+
+            // Example: sample multiple points at once (useful for reading an HP bar's width)
+            using (Bitmap frame = WindowCapture.CaptureClientArea(hWnd))
             {
-                Console.WriteLine(state);
-                lastPrinted = state.Signature;
+                for (int x = 100; x <= 140; x += 10)
+                {
+                    Color c = frame.GetPixel(x, 45);
+                    Console.WriteLine($"  x={x}: R={c.R} G={c.G} B={c.B}");
+                }
             }
-
-            var reply = new StringBuilder();
-
-            if (!sentWatches)
-            {
-                reply.Append("watch=").Append(Watch.Encode(Watches)).Append(' ');
-                sentWatches = true;
-            }
-
-            reply.Append(bot.Decide(state));
-            SendMessage(stream, reply.ToString());
         }
-
-        listener.Stop();
-    }
-
-    // ---------------------------------------------------------------- wire format
-    // BizHawk 2.6.2+ frames every message as "<decimal length> <payload>".
-
-    private static string? ReadMessage(NetworkStream stream)
-    {
-        var lengthText = new StringBuilder();
-
-        while (true)
-        {
-            var b = stream.ReadByte();
-            if (b < 0) return null;
-            if (b == ' ') break;
-            lengthText.Append((char)b);
-        }
-
-        if (!int.TryParse(lengthText.ToString(), out var length) || length < 0)
-            throw new InvalidDataException($"Bad length prefix: '{lengthText}'");
-
-        var buffer = new byte[length];
-        var read = 0;
-        while (read < length)
-        {
-            var n = stream.Read(buffer, read, length - read);
-            if (n <= 0) return null;
-            read += n;
-        }
-
-        return Encoding.ASCII.GetString(buffer);
-    }
-
-    private static void SendMessage(NetworkStream stream, string message)
-    {
-        // Keep payloads ASCII: BizHawk counts chars, not UTF-8 bytes.
-        var bytes = Encoding.ASCII.GetBytes($"{message.Length} {message}");
-        stream.Write(bytes, 0, bytes.Length);
-        stream.Flush();
-    }
-}
-
-internal readonly record struct Watch(string Name, uint Address, string Type)
-{
-    public static string Encode(IReadOnlyCollection<Watch> watches)
-    {
-        if (watches.Count == 0) return "-";
-        return string.Join(",", watches.Select(w => $"{w.Name}:0x{w.Address:X8}:{w.Type}"));
-    }
-}
-
-/// <summary>Whatever the Lua side reported this frame.</summary>
-internal sealed class GameState
-{
-    private readonly Dictionary<string, long> _values = new(StringComparer.Ordinal);
-
-    public long Frame => Get("frame");
-
-    public long Get(string name) => _values.TryGetValue(name, out var v) ? v : 0;
-
-    public bool Has(string name) => _values.ContainsKey(name);
-
-    public static GameState Parse(string line)
-    {
-        var state = new GameState();
-
-        foreach (var token in line.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var split = token.IndexOf('=');
-            if (split <= 0) continue;
-
-            var key = token[..split];
-            if (long.TryParse(token[(split + 1)..], out var value))
-                state._values[key] = value;
-        }
-
-        return state;
-    }
-
-    /// <summary>Everything except the frame counter, so callers can detect real change.</summary>
-    public string Signature =>
-        string.Join("  ", _values.Where(kv => kv.Key != "frame")
-                                 .Select(kv => $"{kv.Key}={kv.Value}"));
-
-    public override string ToString()
-    {
-        var body = Signature;
-        return $"[{Frame,8}] {(body.Length > 0 ? body : "(no watches configured)")}";
-    }
-}
-
-/// <summary>
-/// The brain. Right now it does nothing but hold A every couple of seconds so
-/// you can confirm input is actually reaching the game.
-/// </summary>
-internal sealed class Bot
-{
-    public string Decide(GameState state)
-    {
-        if (state.Frame % 120 == 0)
-            return "press=A hold=3";
-
-        return "press=- hold=0";
     }
 }
