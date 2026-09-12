@@ -11,6 +11,18 @@ using static aAIlga.Pokemon;
 using PixelChecking;
 using static EmulatorBot.InputSimulator;
 
+/**
+ *         _  ___  _____ _             
+ *        | |/ _ \|_   _| |            
+ *      __| / /_\ \ | | | | __ _  __ _ 
+ *     / _` |  _  | | | | |/ _` |/ _` |
+ *    | (_| | | | |_| |_| | (_| | (_| |
+ *     \__,_\_| |_/\___/|_|\__, |\__,_|
+ *                          __/ |      
+ *                         |___/       
+ *                         
+ * Pokemon Platinum Automatic Battle Program                         
+ */
 
 namespace EmulatorBot
 {
@@ -565,9 +577,80 @@ namespace EmulatorBot
             return false;
         }
 
+        public static int FirstNonFaintedPokemon()
+        {
+            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 730, 165, 140, 119))
+            {
+                Console.WriteLine("FAINT -> Active Pokemon is not fainted");
+                return 1;
+            }
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 650, 165, 140, 119))
+            {
+                Console.WriteLine("FAINT -> 2nd Pokemon is not fainted, selecting...");
+                return 2;
+            }
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 750, 165, 140, 119))
+            {
+                Console.WriteLine("FAINT -> 3rd Pokemon is not fainted, selecting...");
+                return 3;
+            }
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 780, 165, 140, 119))
+            {
+                Console.WriteLine("FAINT -> 4th Pokemon is not fainted, selecting...");
+                return 4;
+            }
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 860, 165, 140, 119))
+            {
+                Console.WriteLine("FAINT -> 5th Pokemon is not fainted, selecting...");
+                return 5;
+            }
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 900, 165, 140, 119))
+            {
+                Console.WriteLine("FAINT -> 6th Pokemon is not fainted, selecting...");
+                return 6;
+            }
+            else
+            {
+                Console.WriteLine("ERROR -> There are no Pokemon avalible to switch in. You have blacked out.");
+                return -1;
+            }
+        }
+
+
         public static void SelectFirstAvaliblePokemon()
         {
-            
+            int @switch = FirstNonFaintedPokemon();
+
+            switch (@switch)
+            {
+                case 1:
+                    string nuggetPath1 = "routes/Move1.json";
+                    RoutingNugget nugget1 = RoutingNugget.Load(nuggetPath1);
+                    nugget1.Execute();
+                    break;
+
+                case 2:
+                    string nuggetPath2 = "routes/Move2.json";
+                    RoutingNugget nugget2 = RoutingNugget.Load(nuggetPath2);
+                    nugget2.Execute();
+                    break;
+
+                case 3:
+                    string nuggetPath3 = "routes/Move3.json";
+                    RoutingNugget nugget3 = RoutingNugget.Load(nuggetPath3);
+                    nugget3.Execute();
+                    break;
+
+                case 4:
+                    string nuggetPath4 = "routes/Move4.json";
+                    RoutingNugget nugget4 = RoutingNugget.Load(nuggetPath4);
+                    nugget4.Execute();
+                    break;
+
+                default:
+                    Console.WriteLine("Switch");
+                    break;
+            }
         }
 
         private static void Main()
@@ -646,6 +729,8 @@ namespace EmulatorBot
                 if(IsActivePokemonFainted())
                 {
                     Console.WriteLine("FAINT -> The active pokemon has fainted and will need to switch");
+                    Console.WriteLine(FirstNonFaintedPokemon());
+                    //SelectFirstAvaliblePokemon();
                 }
             }
         }
