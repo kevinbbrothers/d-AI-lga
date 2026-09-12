@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "xpYkGTaiGuA=",
+  "dgSpecHash": "IfeNIF0p54U=",
   "success": true,
-  "projectFilePath": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\aAIlga.csproj",
+  "projectFilePath": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\d-AI-lga\\aAIlga\\aAIlga.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\tacoc\\.nuget\\packages\\microsoft.win32.systemevents\\10.0.12\\microsoft.win32.systemevents.10.0.12.nupkg.sha512",
-    "C:\\Users\\tacoc\\.nuget\\packages\\system.drawing.common\\10.0.12\\system.drawing.common.10.0.12.nupkg.sha512"
+    "C:\\Users\\kevin\\.nuget\\packages\\microsoft.win32.systemevents\\10.0.12\\microsoft.win32.systemevents.10.0.12.nupkg.sha512",
+    "C:\\Users\\kevin\\.nuget\\packages\\system.drawing.common\\10.0.12\\system.drawing.common.10.0.12.nupkg.sha512"
   ],
   "logs": []
 }

@@ -1,0 +1,9 @@
+{
+  "trainerId": 27920,
+  "secretId": 16907,
+  "battleSys": 36436392,
+  "battleCtx": 36448804,
+  "battleType": 1,
+  "playerActive": [{"battler":0,"side":"player","activePartySlot":1,"battleMonAddr":36460388,"partyMonAddr":36477528,"pid":4257563242,"species":"None","currentHp":16,"moves":["Scratch","Leer","--","--"],"ability":"Ability#221","nature":"Quiet","heldItem":"Item#9741","status":"None","statusRaw":0,"movePPs":[160,220,180,38],"rawBattleStats":{"attack":19595592,"defense":22020403,"speed":21299531,"spAttack":-2147483648,"spDefense":135}}],
+  "trainerActive": [{"battler":1,"side":"enemy","activePartySlot":1,"battleMonAddr":36460580,"partyMonAddr":36478984,"pid":9229448,"species":"None","currentHp":19,"moves":["Tackle","Growl","--","--"],"ability":"Trace","nature":"Careful","heldItem":"Item#2572","status":"None","statusRaw":0,"movePPs":[0,0,0,0],"rawBattleStats":{"attack":0,"defense":0,"speed":0,"spAttack":-2147483648,"spDefense":135}}]
+}

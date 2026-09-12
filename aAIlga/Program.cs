@@ -7,8 +7,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
+using dAIlga;
 
-namespace EmulatorBot
+namespace dAIlga
 {
     /// <summary>A single step: which key, how long to hold it, and how long to wait after.</summary>
     public class RoutingStep
@@ -59,6 +60,296 @@ namespace EmulatorBot
 
                 if (step.DelayAfterMs > 0)
                     Thread.Sleep(step.DelayAfterMs);
+            }
+        }
+    }
+
+    /// <summary>A single pixel's expected color, with a per-channel tolerance.</summary>
+    public class PixelCondition
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public byte R { get; set; }
+        public byte G { get; set; }
+        public byte B { get; set; }
+        public int Tolerance { get; set; } = 10;
+
+        public bool Matches(Color actual) =>
+            Math.Abs(actual.R - R) <= Tolerance &&
+            Math.Abs(actual.G - G) <= Tolerance &&
+            Math.Abs(actual.B - B) <= Tolerance;
+    }
+
+    /// <summary>
+    /// A named, loadable/saveable set of pixel conditions representing one game state
+    /// (e.g. "InBattleMenu"). Matches() is true only if every pixel in the group matches.
+    /// </summary>
+    public class PixelGroup
+    {
+        public string Name { get; set; } = "";
+        public List<PixelCondition> Pixels { get; set; } = new();
+
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true
+        };
+
+        public static PixelGroup Load(string filePath)
+        {
+            string json = File.ReadAllText(filePath);
+            return JsonSerializer.Deserialize<PixelGroup>(json, JsonOptions)
+                   ?? throw new InvalidDataException($"Could not parse pixel group: {filePath}");
+        }
+
+        public void Save(string filePath)
+        {
+            File.WriteAllText(filePath, JsonSerializer.Serialize(this, JsonOptions));
+        }
+
+        /// <summary>Checks every pixel condition against an already-captured frame.</summary>
+        public bool Matches(Bitmap frame)
+        {
+            foreach (PixelCondition cond in Pixels)
+            {
+                if (!cond.Matches(frame.GetPixel(cond.X, cond.Y)))
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>Captures the current frame from hWnd and checks every pixel condition against it.</summary>
+        public bool Matches(IntPtr hWnd)
+        {
+            using Bitmap frame = WindowCapture.CaptureClientArea(hWnd);
+            return Matches(frame);
+        }
+    }
+
+    /// <summary>One party slot's HP snapshot, as written by BattleDump.lua.</summary>
+    public class PartySlotState
+    {
+        public int Slot { get; set; }
+        public int Hp { get; set; }
+        public int MaxHp { get; set; }
+    }
+
+    /// <summary>
+    /// Mirrors the JSON written by BattleDump.lua (the DeSmuME Lua script). Poll
+    /// Load() during battle to get current HP for player, opponent, and full party.
+    /// </summary>
+    public class BattleState
+    {
+        public bool InBattle { get; set; }
+        public int PlayerHP { get; set; }
+        public int PlayerMaxHP { get; set; }
+        public int OpponentHP { get; set; }
+        public int OpponentMaxHP { get; set; }
+        public List<PartySlotState> Party { get; set; } = new();
+
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        /// <summary>
+        /// Reads the JSON file the Lua script writes. Returns null (rather than throwing)
+        /// if the file doesn't exist yet or is mid-write — callers should just retry next tick.
+        /// </summary>
+        public static BattleState? Load(string filePath)
+        {
+            try
+            {
+                string json = File.ReadAllText(filePath);
+                return JsonSerializer.Deserialize<BattleState>(json, JsonOptions);
+            }
+            catch (IOException)
+            {
+                return null; // file locked mid-write by the Lua script; try again next poll
+            }
+            catch (JsonException)
+            {
+                return null; // partial/corrupt write caught mid-flush; try again next poll
+            }
+        }
+    }
+
+    /// <summary>Raw battle-relevant stat block from a snapshot (values as Plat_Qol.lua wrote them).</summary>
+    public class RawBattleStats
+    {
+        public long Attack { get; set; }
+        public long Defense { get; set; }
+        public long Speed { get; set; }
+        public long SpAttack { get; set; }
+        public long SpDefense { get; set; }
+    }
+
+    /// <summary>One active battler (player or enemy) from a BattleSnapshot-##### dump.</summary>
+    public class ActiveBattler
+    {
+        public int Battler { get; set; }
+        public string Side { get; set; } = "";
+        public int ActivePartySlot { get; set; }
+        public long BattleMonAddr { get; set; }
+        public long PartyMonAddr { get; set; }
+        public long Pid { get; set; }
+        public string Species { get; set; } = "";
+        public int CurrentHp { get; set; }
+        public List<string> Moves { get; set; } = new();
+        public string Ability { get; set; } = "";
+        public string Nature { get; set; } = "";
+        public string HeldItem { get; set; } = "";
+        public string Status { get; set; } = "";
+        public int StatusRaw { get; set; }
+        public List<int> MovePPs { get; set; } = new();
+        public RawBattleStats RawBattleStats { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Mirrors the JSON written to \dumps\BattleSnapshot-##### when 't' is pressed in-game.
+    /// Note: the sample dump has no MaxHp field, only CurrentHp — if you need max HP,
+    /// pull it from your party JSON (PartyHpDump.lua) and match by ActivePartySlot.
+    /// </summary>
+    public class BattleSnapshot
+    {
+        public int TrainerId { get; set; }
+        public int SecretId { get; set; }
+        public long BattleSys { get; set; }
+        public long BattleCtx { get; set; }
+        public int BattleType { get; set; }
+        public List<ActiveBattler> PlayerActive { get; set; } = new();
+        public List<ActiveBattler> TrainerActive { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Presses 't' to trigger a Plat_Qol.lua battle snapshot, waits for the new
+    /// BattleSnapshot-##### file to appear in the dumps folder, parses it, and
+    /// deletes it so the next capture can be told apart from this one.
+    /// </summary>
+    public static class BattleSnapshotReader
+    {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        /// <summary>
+        /// Triggers and reads one battle snapshot. Returns null if no new file
+        /// appeared within timeoutMs (e.g. not actually in battle).
+        /// </summary>
+        public static BattleSnapshot? CaptureSnapshot(
+            string dumpsDir = "dumps",
+            int timeoutMs = 5000,
+            int pollIntervalMs = 100)
+        {
+            var existingFiles = Directory.Exists(dumpsDir)
+                ? new HashSet<string>(Directory.GetFiles(dumpsDir, "BattleSnapshot-*"))
+                : new HashSet<string>();
+
+            InputSimulator.PressKey(InputSimulator.Key.T, 100);
+
+            string? newFile = FindNewSnapshotFile(dumpsDir, existingFiles, timeoutMs, pollIntervalMs);
+            if (newFile == null)
+            {
+                Console.WriteLine("Timed out waiting for battle snapshot — are you actually in a battle?");
+                return null;
+            }
+
+            BattleSnapshot? snapshot = ReadSnapshotWithRetry(newFile);
+            TryDeleteFile(newFile);
+            return snapshot;
+        }
+
+        private static string? FindNewSnapshotFile(
+            string dumpsDir, HashSet<string> existingFiles, int timeoutMs, int pollIntervalMs)
+        {
+            var sw = Stopwatch.StartNew();
+            while (sw.ElapsedMilliseconds < timeoutMs)
+            {
+                if (Directory.Exists(dumpsDir))
+                {
+                    foreach (string f in Directory.GetFiles(dumpsDir, "BattleSnapshot-*"))
+                    {
+                        if (!existingFiles.Contains(f))
+                            return f;
+                    }
+                }
+                Thread.Sleep(pollIntervalMs);
+            }
+            return null;
+        }
+
+        /// <summary>Retries briefly in case the Lua script is still mid-write when we first see the file.</summary>
+        private static BattleSnapshot? ReadSnapshotWithRetry(string filePath, int maxAttempts = 10, int retryDelayMs = 50)
+        {
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                try
+                {
+                    string json = File.ReadAllText(filePath);
+                    return JsonSerializer.Deserialize<BattleSnapshot>(json, JsonOptions);
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(retryDelayMs);
+                }
+                catch (JsonException)
+                {
+                    Thread.Sleep(retryDelayMs);
+                }
+            }
+            Console.WriteLine($"Failed to read/parse snapshot after {maxAttempts} attempts: {filePath}");
+            return null;
+        }
+
+        private static void TryDeleteFile(string path)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (IOException)
+            {
+                Console.WriteLine($"Warning: could not delete snapshot file (may still be locked): {path}");
+            }
+        }
+
+        /// <summary>
+        /// Reads a specific snapshot file directly (no key press, no polling, no delete) and
+        /// prints species + type for both the player's and opponent's active Pokémon.
+        /// </summary>
+        public static void PrintBattleTypes(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine($"Snapshot file not found: {filePath}");
+                return;
+            }
+
+            string json = File.ReadAllText(filePath);
+            BattleSnapshot? snapshot = JsonSerializer.Deserialize<BattleSnapshot>(json, JsonOptions);
+            if (snapshot == null)
+            {
+                Console.WriteLine($"Could not parse snapshot: {filePath}");
+                return;
+            }
+
+            PrintSideTypes("Player", snapshot.PlayerActive);
+            PrintSideTypes("Opponent", snapshot.TrainerActive);
+        }
+
+        /// <summary>Convenience overload: builds "dumps/BattleSnapshot-{trainerId}.json" and reads it.</summary>
+        public static void PrintBattleTypes(int trainerId, string dumpsDir = "dumps")
+        {
+            PrintBattleTypes(Path.Combine(dumpsDir, $"BattleSnapshot-{trainerId}.json"));
+        }
+
+        private static void PrintSideTypes(string label, List<ActiveBattler> battlers)
+        {
+            foreach (ActiveBattler mon in battlers)
+            {
+                PokemonTypeInfo? typeInfo = PokemonTypes.GetTypes(mon.Species);
+                string typeText = typeInfo?.ToString() ?? "Unknown";
+                Console.WriteLine($"{label}: {mon.Species} ({typeText}) — HP: {mon.CurrentHp}");
             }
         }
     }
@@ -150,28 +441,6 @@ namespace EmulatorBot
 
         private const uint MAPVK_VK_TO_VSC = 0;
 
-        //[StructLayout(LayoutKind.Sequential)]
-        //private struct INPUT
-        //{
-        //    public uint type;
-        //    public InputUnion U;
-        //}   
-
-        //[StructLayout(LayoutKind.Explicit)]
-        //private struct InputUnion
-        //{
-        //    [FieldOffset(0)] public KEYBDINPUT ki;
-        //}
-
-        //[StructLayout(LayoutKind.Sequential)]
-        //private struct KEYBDINPUT
-        //{
-        //    public ushort wVk;
-        //    public ushort wScan;
-        //    public uint dwFlags;
-        //    public uint time;
-        //    public IntPtr dwExtraInfo;
-        //}
         [StructLayout(LayoutKind.Sequential)]
         private struct INPUT
         {
@@ -220,6 +489,7 @@ namespace EmulatorBot
             public ushort wParamL;
             public ushort wParamH;
         }
+
         private const uint INPUT_KEYBOARD = 1;
         private const uint KEYEVENTF_KEYUP = 0x0002;
         private const uint KEYEVENTF_SCANCODE = 0x0008;
@@ -241,7 +511,8 @@ namespace EmulatorBot
             A = 0x58,      // 'X' key, common DeSmuME default for A
             B = 0x5A,      // 'Z' key, common DeSmuME default for B
             Start = 0x0D,  // Enter
-            Select = 0x08  // Backspace
+            Select = 0x08, // Backspace
+            T = 0x54       // Triggers Plat_Qol.lua's battle snapshot dump
         }
 
         private static void SendKeyEvent(ushort vk, bool keyDown)
@@ -312,7 +583,6 @@ namespace EmulatorBot
             // Example: move right, then read a pixel (e.g. an HP bar sample point)
             InputSimulator.PressKey(InputSimulator.Key.Right, 150);
             Thread.Sleep(200); // let the frame update
-            
 
             Color pixel = WindowCapture.GetPixel(hWnd, 120, 45);
             Console.WriteLine($"Pixel at (120,45): R={pixel.R} G={pixel.G} B={pixel.B}");
@@ -349,7 +619,52 @@ namespace EmulatorBot
                 Console.WriteLine("File Not Found");
             }
 
-            
+            // Example: check a group of pixels against a saved state
+            // JSON format:
+            // {
+            //   "Name": "InBattleMenu",
+            //   "Pixels": [
+            //     { "X": 12, "Y": 150, "R": 248, "G": 248, "B": 248, "Tolerance": 10 },
+            //     { "X": 45, "Y": 160, "R": 40,  "G": 40,  "B": 40,  "Tolerance": 10 }
+            //   ]
+            // }
+            string pixelGroupPath = "routes/InBattleMenu.json";
+            if (File.Exists(pixelGroupPath))
+            {
+                PixelGroup group = PixelGroup.Load(pixelGroupPath);
+                bool isMatch = group.Matches(hWnd);
+                Console.WriteLine($"PixelGroup '{group.Name}' matches: {isMatch}");
+
+                if (isMatch)
+                {
+                    // execute whatever logic corresponds to this state
+                }
+            }
+            // Example: poll the battle state JSON dumped by BattleDump.lua
+            string battleStatePath = "battle_state.json";
+            BattleState? battle = BattleState.Load(battleStatePath);
+            if (battle is { InBattle: true })
+            {
+                Console.WriteLine($"Player HP: {battle.PlayerHP}/{battle.PlayerMaxHP}");
+                Console.WriteLine($"Opponent HP: {battle.OpponentHP}/{battle.OpponentMaxHP}");
+                foreach (var slot in battle.Party)
+                    Console.WriteLine($"  Party[{slot.Slot}]: {slot.Hp}/{slot.MaxHp}");
+            }
+
+            // Example: trigger a Plat_Qol.lua battle snapshot and read it
+            BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot();
+            if (snapshot != null)
+            {
+                foreach (var mon in snapshot.PlayerActive)
+                    Console.WriteLine($"Player active: {mon.CurrentHp} HP, moves: {string.Join(", ", mon.Moves)}");
+                foreach (var mon in snapshot.TrainerActive)
+                    Console.WriteLine($"Enemy active: {mon.CurrentHp} HP, moves: {string.Join(", ", mon.Moves)}");
+            }
+
+            // Example: read a specific known snapshot file and print both sides' types
+            BattleSnapshotReader.PrintBattleTypes(@"dumps\BattleSnapshot-27920.json");
+            // Or, if you already know the trainerId at runtime:
+            // BattleSnapshotReader.PrintBattleTypes(27920);
         }
     }
 }
