@@ -237,7 +237,7 @@ namespace EmulatorBot
         /// appeared within timeoutMs (e.g. not actually in battle).
         /// </summary>
         public static BattleSnapshot? CaptureSnapshot(
-            string dumpsDir = "dumps",
+            string dumpsDir = @"C:\Users\tacoc\Desktop\dumps",
             int timeoutMs = 5000,
             int pollIntervalMs = 100)
         {
@@ -338,7 +338,7 @@ namespace EmulatorBot
         }
 
         /// <summary>Convenience overload: builds "dumps/BattleSnapshot-{trainerId}.json" and reads it.</summary>
-        public static void PrintBattleTypes(int trainerId, string dumpsDir = "dumps")
+        public static void PrintBattleTypes(int trainerId, string dumpsDir = "C:\\Users\\tacoc\\Desktop\\dumps")
         {
             PrintBattleTypes(Path.Combine(dumpsDir, $"BattleSnapshot-{trainerId}.json"));
         }
@@ -664,7 +664,7 @@ namespace EmulatorBot
             }
 
             // Example: trigger a Plat_Qol.lua battle snapshot and read it
-            BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot();
+            BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot(@"C:\Users\tacoc\Desktop\dumps");
             if (snapshot != null)
             {
                 foreach (var mon in snapshot.PlayerActive)
@@ -674,7 +674,7 @@ namespace EmulatorBot
             }
 
             // Example: read a specific known snapshot file and print both sides' types
-            BattleSnapshotReader.PrintBattleTypes(@"dumps\BattleSnapshot-27920.json");
+            BattleSnapshotReader.PrintBattleTypes(27920);
             // Or, if you already know the trainerId at runtime:
             // BattleSnapshotReader.PrintBattleTypes(27920);
         }
