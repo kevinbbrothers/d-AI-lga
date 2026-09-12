@@ -1,11 +1,13 @@
-﻿using System;
+﻿using aAIlga;
+using dAIlga;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
-using dAIlga;
+
 
 namespace EmulatorBot
 {
@@ -471,65 +473,111 @@ namespace EmulatorBot
     {
         private static void Main()
         {
-            // Adjust to your emulator window's exact title (check Task Manager / Spy++ if unsure)
-            IntPtr hWnd = WindowCapture.FindEmulatorWindow("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum");
-            if (hWnd == IntPtr.Zero)
+            //// Adjust to your emulator window's exact title (check Task Manager / Spy++ if unsure)
+            //IntPtr hWnd = WindowCapture.FindEmulatorWindow("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum");
+            //if (hWnd == IntPtr.Zero)
+            //{
+            //    Console.WriteLine("Emulator window not found. Is it running?");
+            //    return;
+            //}
+
+            //if (!WindowCapture.Focus(hWnd))
+            //    Console.WriteLine("Warning: could not confirm emulator window has focus. Click it manually and re-run.");
+            //Thread.Sleep(300); // let focus settle before sending input
+
+            //// Example: load and play a routing nugget
+            //// JSON format:
+            //// {
+            ////   "Name": "OpenPartyMenu",
+            ////   "Steps": [
+            ////     { "Key": "Start", "DurationMs": 100, "DelayAfterMs": 300 },
+            ////     { "Key": "Down",  "DurationMs": 100, "DelayAfterMs": 150 },
+            ////     { "Key": "A",     "DurationMs": 100, "DelayAfterMs": 500 }
+            ////   ]
+            //// }
+            //string nuggetPath = "routes/TestMenuNugget.json";
+            //if (File.Exists(nuggetPath))
+            //{
+            //    RoutingNugget nugget = RoutingNugget.Load(nuggetPath);
+            //    Console.WriteLine($"Playing nugget: {nugget.Name} ({nugget.Steps.Count} steps)");
+            //    nugget.Execute();
+            //}
+            //else
+            //{
+            //    Console.WriteLine("File Not Found");
+            //}
+
+            //// Example: poll the battle state JSON dumped by BattleDump.lua
+            //string battleStatePath = "battle_state.json";
+            //BattleState? battle = BattleState.Load(battleStatePath);
+            //if (battle is { InBattle: true })
+            //{
+            //    Console.WriteLine($"Player HP: {battle.PlayerHP}/{battle.PlayerMaxHP}");
+            //    Console.WriteLine($"Opponent HP: {battle.OpponentHP}/{battle.OpponentMaxHP}");
+            //    foreach (var slot in battle.Party)
+            //        Console.WriteLine($"  Party[{slot.Slot}]: {slot.Hp}/{slot.MaxHp}");
+            //}
+
+            //// Example: trigger a Plat_Qol.lua battle snapshot and read it
+            //BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot(@"C:\Users\tacoc\Desktop\dumps");
+            //if (snapshot != null)
+            //{
+            //    foreach (var mon in snapshot.PlayerActive)
+            //        Console.WriteLine($"Player active: {mon.CurrentHp} HP, moves: {string.Join(", ", mon.Moves)}");
+            //    foreach (var mon in snapshot.TrainerActive)
+            //        Console.WriteLine($"Enemy active: {mon.CurrentHp} HP, moves: {string.Join(", ", mon.Moves)}");
+            //}
+
+            //// Example: read a specific known snapshot file and print both sides' types
+            //BattleSnapshotReader.PrintBattleTypes(27920);
+            //// Or, if you already know the trainerId at runtime:
+            //// BattleSnapshotReader.PrintBattleTypes(27920);
+            ///
+
+
+            // Create your Pokémon
+            Pokemon myPokemon = new Pokemon
             {
-                Console.WriteLine("Emulator window not found. Is it running?");
-                return;
+                Name = "Infernape",
+                Type1 = "Fire",
+                Type2 = "Fighting",
+                HP = 2,
+                Moves = new List<Move>
+            {
+                new Move { Name = "Flamethrower", Type = "Fire", Power = 90 },
+                new Move { Name = "Close Combat", Type = "Fighting", Power = 120 },
+                new Move { Name = "Grass Knot", Type = "Grass", Power = 80 },
+                new Move { Name = "U-turn", Type = "Bug", Power = 70 }
             }
+            };
 
-            if (!WindowCapture.Focus(hWnd))
-                Console.WriteLine("Warning: could not confirm emulator window has focus. Click it manually and re-run.");
-            Thread.Sleep(300); // let focus settle before sending input
-
-            // Example: load and play a routing nugget
-            // JSON format:
-            // {
-            //   "Name": "OpenPartyMenu",
-            //   "Steps": [
-            //     { "Key": "Start", "DurationMs": 100, "DelayAfterMs": 300 },
-            //     { "Key": "Down",  "DurationMs": 100, "DelayAfterMs": 150 },
-            //     { "Key": "A",     "DurationMs": 100, "DelayAfterMs": 500 }
-            //   ]
-            // }
-            string nuggetPath = "routes/TestMenuNugget.json";
-            if (File.Exists(nuggetPath))
+            Pokemon opponentPokemon = new Pokemon
             {
-                RoutingNugget nugget = RoutingNugget.Load(nuggetPath);
-                Console.WriteLine($"Playing nugget: {nugget.Name} ({nugget.Steps.Count} steps)");
-                nugget.Execute();
+                Name = "Empoleon",
+                Type1 = "Water",
+                Type2 = "Steel",
+                HP = 100,
+                Moves = new List<Move>
+            {
+                new Move { Name = "Surf", Type = "Fire", Power = 90 },
+                new Move { Name = "Ice Beam", Type = "Ice", Power = 90 },
+                new Move { Name = "Flash Cannon", Type = "Steel", Power = 80 },
+                new Move { Name = "Aqua Jet", Type = "Fire", Power = 40 }
+            }
+            };
+
+            // Use the BattleLogic class
+            int action = BattleLogic.ChooseAction(myPokemon, opponentPokemon);
+
+            // Interpret the result
+            if (action == 5)
+            {
+                Console.WriteLine("Switch!");
             }
             else
             {
-                Console.WriteLine("File Not Found");
+                Console.WriteLine($"Use move #{action}: {myPokemon.Moves[action - 1].Name}");
             }
-
-            // Example: poll the battle state JSON dumped by BattleDump.lua
-            string battleStatePath = "battle_state.json";
-            BattleState? battle = BattleState.Load(battleStatePath);
-            if (battle is { InBattle: true })
-            {
-                Console.WriteLine($"Player HP: {battle.PlayerHP}/{battle.PlayerMaxHP}");
-                Console.WriteLine($"Opponent HP: {battle.OpponentHP}/{battle.OpponentMaxHP}");
-                foreach (var slot in battle.Party)
-                    Console.WriteLine($"  Party[{slot.Slot}]: {slot.Hp}/{slot.MaxHp}");
-            }
-
-            // Example: trigger a Plat_Qol.lua battle snapshot and read it
-            BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot(@"C:\Users\tacoc\Desktop\dumps");
-            if (snapshot != null)
-            {
-                foreach (var mon in snapshot.PlayerActive)
-                    Console.WriteLine($"Player active: {mon.CurrentHp} HP, moves: {string.Join(", ", mon.Moves)}");
-                foreach (var mon in snapshot.TrainerActive)
-                    Console.WriteLine($"Enemy active: {mon.CurrentHp} HP, moves: {string.Join(", ", mon.Moves)}");
-            }
-
-            // Example: read a specific known snapshot file and print both sides' types
-            BattleSnapshotReader.PrintBattleTypes(27920);
-            // Or, if you already know the trainerId at runtime:
-            // BattleSnapshotReader.PrintBattleTypes(27920);
         }
     }
 }

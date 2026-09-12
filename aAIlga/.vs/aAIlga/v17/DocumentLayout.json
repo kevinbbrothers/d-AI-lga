@@ -1,18 +1,22 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\d-AI-lga\\aAIlga\\",
+  "WorkspaceRootPath": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|c:\\users\\kevin\\documents\\programming\\c#\\d-ai-lga\\d-ai-lga\\aailga\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|c:\\users\\tacoc\\desktop\\hackathon\\d-ai-lga\\aailga\\battlelogic.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|solutionrelative:battlelogic.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|c:\\users\\tacoc\\desktop\\hackathon\\d-ai-lga\\aailga\\pokemon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|solutionrelative:pokemon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|c:\\users\\tacoc\\desktop\\hackathon\\d-ai-lga\\aailga\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|c:\\users\\kevin\\documents\\programming\\c#\\d-ai-lga\\d-ai-lga\\aailga\\moves.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|c:\\users\\tacoc\\desktop\\hackathon\\d-ai-lga\\aailga\\moves.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|solutionrelative:moves.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|c:\\users\\kevin\\documents\\programming\\c#\\d-ai-lga\\d-ai-lga\\aailga\\pokemon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81A1EA4A-16B3-4DA6-9980-8C624FAA1557}|aAIlga.csproj|solutionrelative:pokemon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,43 +26,58 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Moves.cs",
-              "DocumentMoniker": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\d-AI-lga\\aAIlga\\Moves.cs",
-              "RelativeDocumentMoniker": "Moves.cs",
-              "ToolTip": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\d-AI-lga\\aAIlga\\Moves.cs",
-              "RelativeToolTip": "Moves.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAFAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "BattleLogic.cs",
+              "DocumentMoniker": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\BattleLogic.cs",
+              "RelativeDocumentMoniker": "BattleLogic.cs",
+              "ToolTip": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\BattleLogic.cs",
+              "RelativeToolTip": "BattleLogic.cs",
+              "ViewState": "AgIAABoAAAAAAAAAAAAcwBkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-12T14:09:07.532Z"
+              "WhenOpened": "2026-09-12T15:18:54.916Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "Pokemon.cs",
-              "DocumentMoniker": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\d-AI-lga\\aAIlga\\Pokemon.cs",
-              "RelativeDocumentMoniker": "Pokemon.cs",
-              "ToolTip": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\d-AI-lga\\aAIlga\\Pokemon.cs",
-              "RelativeToolTip": "Pokemon.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAHwAAAAAAAAAAAASwH0AAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-12T13:34:29.363Z"
+              "WhenOpened": "2026-09-12T15:15:38.676Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\d-AI-lga\\aAIlga\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\d-AI-lga\\aAIlga\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAEIBAAAAAAAAAAAkwLAAAAAqAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "Pokemon.cs",
+              "DocumentMoniker": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\Pokemon.cs",
+              "RelativeDocumentMoniker": "Pokemon.cs",
+              "ToolTip": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\Pokemon.cs",
+              "RelativeToolTip": "Pokemon.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-11T21:07:26.2Z",
+              "WhenOpened": "2026-09-12T15:15:36.994Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Moves.cs",
+              "DocumentMoniker": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\Moves.cs",
+              "RelativeDocumentMoniker": "Moves.cs",
+              "ToolTip": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\aAIlga\\Moves.cs",
+              "RelativeToolTip": "Moves.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAAQwBMAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T14:09:07.532Z",
               "EditorCaption": ""
             }
           ]
