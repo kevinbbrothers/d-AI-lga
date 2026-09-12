@@ -502,6 +502,43 @@ namespace EmulatorBot
             return action;
         }
 
+        public static void PerformAction()
+        {
+            int action = GetAction();
+
+            switch (action)
+            {
+                case 1:
+                    string nuggetPath1 = "routes/Move1.json";
+                    RoutingNugget nugget1 = RoutingNugget.Load(nuggetPath1);
+                    nugget1.Execute();
+                    break;
+
+                case 2:
+                    string nuggetPath2 = "routes/Move2.json";
+                    RoutingNugget nugget2 = RoutingNugget.Load(nuggetPath2);
+                    nugget2.Execute();
+                    break;
+
+                case 3:
+                    string nuggetPath3 = "routes/Move3.json";
+                    RoutingNugget nugget3 = RoutingNugget.Load(nuggetPath3);
+                    nugget3.Execute();
+                    break;
+
+                case 4:
+                    string nuggetPath4 = "routes/Move4.json";
+                    RoutingNugget nugget4 = RoutingNugget.Load(nuggetPath4);
+                    nugget4.Execute();
+                    break;
+
+                default:
+                    Console.WriteLine("Switch");
+                    break;
+            }
+
+        }
+
         private static void Main()
         {
             //// Adjust to your emulator window's exact title (check Task Manager / Spy++ if unsure)
@@ -565,41 +602,11 @@ namespace EmulatorBot
             //// BattleSnapshotReader.PrintBattleTypes(27920);
             ///
 
-
-
-            int action = GetAction();
-
-            switch (action)
+            // Loop
+            while(true)
             {
-                case 1:
-                    string nuggetPath1 = "routes/Move1.json";                   
-                    RoutingNugget nugget1 = RoutingNugget.Load(nuggetPath1);
-                    nugget1.Execute();
-                    break;
 
-                case 2:
-                    string nuggetPath2 = "routes/Move2.json";
-                    RoutingNugget nugget2 = RoutingNugget.Load(nuggetPath2);
-                    nugget2.Execute();
-                    break;
-
-                case 3:
-                    string nuggetPath3 = "routes/Move3.json";
-                    RoutingNugget nugget3 = RoutingNugget.Load(nuggetPath3);
-                    nugget3.Execute();
-                    break;
-
-                case 4:
-                    string nuggetPath4 = "routes/Move4.json";
-                    RoutingNugget nugget4 = RoutingNugget.Load(nuggetPath4);
-                    nugget4.Execute();
-                    break;
-
-                default:
-                    Console.WriteLine("Switch");
-                    break;
             }
-            
         }
     }
 }

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "dAIlga-pixelcalibration": {
+      "commandName": "Project",
+      "commandLineArgs": "check"
+    }
+  }
+}
