@@ -1,0 +1,10 @@
+{
+   "Name": "FMon6",
+   "Steps": [
+     { "Key": "Down", "DurationMs": 200, "DelayAfterMs": 500 },	
+     { "Key": "Down", "DurationMs": 200, "DelayAfterMs": 500 },	
+     { "Key": "Right", "DurationMs": 200, "DelayAfterMs": 500 },	
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 500 },
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 500 }
+   ]
+}

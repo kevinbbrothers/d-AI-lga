@@ -145,14 +145,14 @@ namespace aAIlga
         // -----------------------------
         // FINAL DECISION
         // -----------------------------
-        public static int ChooseAction(Pokemon me, Pokemon opp)
+        public static int ChooseAction(Pokemon me, Pokemon opp, bool lastMon)
         {
             // Rule: Switch if HP is 5 or lower
-            if (me.HP <= 5)
+            if (me.HP <= 5 && !lastMon)
                 return 5;
 
             // Rule: Switch if opponent has a super-effective move
-            if (OpponentHasSuperEffectiveMove(me, opp))
+            if (OpponentHasSuperEffectiveMove(me, opp) && !lastMon)
                 return 5;
 
             // Choose best move using type chart + STAB + power

@@ -494,7 +494,7 @@ namespace EmulatorBot
    
     internal class Program
     {
-        public static int GetAction()
+        public static int GetAction(bool lastMon)
         {
             // Create your Pokémon
             BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot(@"C:\Users\tacoc\Desktop\dumps");
@@ -510,15 +510,15 @@ namespace EmulatorBot
             Pokemon oppMon = new Pokemon(snapshot.TrainerActive[0]);
 
             // Decide what to do
-            int action = BattleLogic.ChooseAction(myMon, oppMon);
+            int action = BattleLogic.ChooseAction(myMon, oppMon, lastMon);
             Console.WriteLine(action);
 
             return action;
         }
 
-        public static void PerformAction()
+        public static void PerformAction(bool lastMon)
         {
-            int action = GetAction();
+            int action = GetAction(lastMon);
 
             switch (action)
             {
@@ -547,7 +547,9 @@ namespace EmulatorBot
                     break;
 
                 default:
-                    Console.WriteLine("Switch");
+                    string nuggetPath5 = "routes/PokeMenu.json";
+                    RoutingNugget nugget5 = RoutingNugget.Load(nuggetPath5);
+                    nugget5.Execute();
                     break;
             }
 
@@ -623,32 +625,44 @@ namespace EmulatorBot
 
             switch (@switch)
             {
-                case 1:
-                    string nuggetPath1 = "routes/Move1.json";
-                    RoutingNugget nugget1 = RoutingNugget.Load(nuggetPath1);
-                    nugget1.Execute();
-                    break;
-
+               
                 case 2:
-                    string nuggetPath2 = "routes/Move2.json";
+                    string nuggetPath2 = "routes/FMon2.json";
                     RoutingNugget nugget2 = RoutingNugget.Load(nuggetPath2);
                     nugget2.Execute();
                     break;
 
                 case 3:
-                    string nuggetPath3 = "routes/Move3.json";
+                    string nuggetPath3 = "routes/FMon3.json";
                     RoutingNugget nugget3 = RoutingNugget.Load(nuggetPath3);
                     nugget3.Execute();
                     break;
 
                 case 4:
-                    string nuggetPath4 = "routes/Move4.json";
+                    string nuggetPath4 = "routes/FMon4.json";
                     RoutingNugget nugget4 = RoutingNugget.Load(nuggetPath4);
                     nugget4.Execute();
                     break;
 
+                case 5:
+                    string nuggetPath5 = "routes/FMon5.json";
+                    RoutingNugget nugget5 = RoutingNugget.Load(nuggetPath5);
+                    nugget5.Execute();
+                    break;
+
+                case 6:
+                    string nuggetPath6 = "routes/FMon6.json";
+                    RoutingNugget nugget6 = RoutingNugget.Load(nuggetPath6);
+                    nugget6.Execute();
+                    break;
+
+                case 1:
+                    InputSimulator.PressKey(InputSimulator.Key.B, 100);
+                    PerformAction(false);
+                    break;
+
                 default:
-                    Console.WriteLine("Switch");
+                    Console.WriteLine("ERROR -> No Available Pokemon");
                     break;
             }
         }
@@ -723,14 +737,14 @@ namespace EmulatorBot
                 if (IsActionAvalible())
                 {
                     Console.WriteLine("ACTION -> Confirmed able to perform action");
-                    PerformAction();
+                    PerformAction(false);
                 }
                 // Check if the active pokemon has fainted and needs to switch
                 if(IsActivePokemonFainted())
                 {
                     Console.WriteLine("FAINT -> The active pokemon has fainted and will need to switch");
-                    Console.WriteLine(FirstNonFaintedPokemon());
-                    //SelectFirstAvaliblePokemon();
+                    //Console.WriteLine(FirstNonFaintedPokemon());
+                    SelectFirstAvaliblePokemon();
                 }
                 // Skip text window
                 if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1260, 500, 115, 140, 189))

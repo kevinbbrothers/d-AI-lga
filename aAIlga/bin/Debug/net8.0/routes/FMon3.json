@@ -1,0 +1,8 @@
+{
+   "Name": "FMon3",
+   "Steps": [
+     { "Key": "Down", "DurationMs": 200, "DelayAfterMs": 500 },	
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 500 },
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 500 }
+   ]
+}
