@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -61,67 +59,6 @@ namespace EmulatorBot
                 if (step.DelayAfterMs > 0)
                     Thread.Sleep(step.DelayAfterMs);
             }
-        }
-    }
-
-    /// <summary>A single pixel's expected color, with a per-channel tolerance.</summary>
-    public class PixelCondition
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public byte R { get; set; }
-        public byte G { get; set; }
-        public byte B { get; set; }
-        public int Tolerance { get; set; } = 10;
-
-        public bool Matches(Color actual) =>
-            Math.Abs(actual.R - R) <= Tolerance &&
-            Math.Abs(actual.G - G) <= Tolerance &&
-            Math.Abs(actual.B - B) <= Tolerance;
-    }
-
-    /// <summary>
-    /// A named, loadable/saveable set of pixel conditions representing one game state
-    /// (e.g. "InBattleMenu"). Matches() is true only if every pixel in the group matches.
-    /// </summary>
-    public class PixelGroup
-    {
-        public string Name { get; set; } = "";
-        public List<PixelCondition> Pixels { get; set; } = new();
-
-        private static readonly JsonSerializerOptions JsonOptions = new()
-        {
-            WriteIndented = true
-        };
-
-        public static PixelGroup Load(string filePath)
-        {
-            string json = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<PixelGroup>(json, JsonOptions)
-                   ?? throw new InvalidDataException($"Could not parse pixel group: {filePath}");
-        }
-
-        public void Save(string filePath)
-        {
-            File.WriteAllText(filePath, JsonSerializer.Serialize(this, JsonOptions));
-        }
-
-        /// <summary>Checks every pixel condition against an already-captured frame.</summary>
-        public bool Matches(Bitmap frame)
-        {
-            foreach (PixelCondition cond in Pixels)
-            {
-                if (!cond.Matches(frame.GetPixel(cond.X, cond.Y)))
-                    return false;
-            }
-            return true;
-        }
-
-        /// <summary>Captures the current frame from hWnd and checks every pixel condition against it.</summary>
-        public bool Matches(IntPtr hWnd)
-        {
-            using Bitmap frame = WindowCapture.CaptureClientArea(hWnd);
-            return Matches(frame);
         }
     }
 
@@ -367,8 +304,8 @@ namespace EmulatorBot
     }
 
     /// <summary>
-    /// Captures the emulator window, reads pixel colors, and simulates key presses.
-    /// No memory access — input via SendInput, state via screen pixels only.
+    /// Finds the emulator window and focuses it so key input actually reaches it.
+    /// No screen capture / pixel reading — game state comes from the Lua dumps instead.
     /// </summary>
     public static class WindowCapture
     {
@@ -376,25 +313,10 @@ namespace EmulatorBot
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
         [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
-
-        [DllImport("user32.dll")]
-        private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
-
-        [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct RECT { public int Left, Top, Right, Bottom; }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct POINT { public int X, Y; }
 
         /// <summary>Find the emulator window by exact title (e.g. "DeSmuME"). Returns IntPtr.Zero if not found.</summary>
         public static IntPtr FindEmulatorWindow(string windowTitle)
@@ -409,37 +331,6 @@ namespace EmulatorBot
             SetForegroundWindow(hWnd);
             Thread.Sleep(100);
             return GetForegroundWindow() == hWnd;
-        }
-
-        /// <summary>
-        /// Captures the CLIENT area of the window (excludes title bar/borders), so pixel
-        /// coordinates you hardcode will match what you see in the emulator's render area.
-        /// </summary>
-        public static Bitmap CaptureClientArea(IntPtr hWnd)
-        {
-            if (hWnd == IntPtr.Zero)
-                throw new InvalidOperationException("Invalid window handle — did FindEmulatorWindow succeed?");
-
-            GetClientRect(hWnd, out RECT clientRect);
-            int width = clientRect.Right - clientRect.Left;
-            int height = clientRect.Bottom - clientRect.Top;
-
-            POINT topLeft = new POINT { X = 0, Y = 0 };
-            ClientToScreen(hWnd, ref topLeft);
-
-            var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-            using (var g = Graphics.FromImage(bmp))
-            {
-                g.CopyFromScreen(topLeft.X, topLeft.Y, 0, 0, new Size(width, height));
-            }
-            return bmp;
-        }
-
-        /// <summary>Convenience: grab one pixel color without holding onto the full bitmap.</summary>
-        public static Color GetPixel(IntPtr hWnd, int x, int y)
-        {
-            using Bitmap bmp = CaptureClientArea(hWnd);
-            return bmp.GetPixel(x, y);
         }
     }
 
@@ -592,23 +483,6 @@ namespace EmulatorBot
                 Console.WriteLine("Warning: could not confirm emulator window has focus. Click it manually and re-run.");
             Thread.Sleep(300); // let focus settle before sending input
 
-            // Example: move right, then read a pixel (e.g. an HP bar sample point)
-            InputSimulator.PressKey(InputSimulator.Key.Right, 150);
-            Thread.Sleep(200); // let the frame update
-
-            Color pixel = WindowCapture.GetPixel(hWnd, 120, 45);
-            Console.WriteLine($"Pixel at (120,45): R={pixel.R} G={pixel.G} B={pixel.B}");
-
-            // Example: sample multiple points at once (useful for reading an HP bar's width)
-            using (Bitmap frame = WindowCapture.CaptureClientArea(hWnd))
-            {
-                for (int x = 100; x <= 140; x += 10)
-                {
-                    Color c = frame.GetPixel(x, 45);
-                    Console.WriteLine($"  x={x}: R={c.R} G={c.G} B={c.B}");
-                }
-            }
-
             // Example: load and play a routing nugget
             // JSON format:
             // {
@@ -631,27 +505,6 @@ namespace EmulatorBot
                 Console.WriteLine("File Not Found");
             }
 
-            // Example: check a group of pixels against a saved state
-            // JSON format:
-            // {
-            //   "Name": "InBattleMenu",
-            //   "Pixels": [
-            //     { "X": 12, "Y": 150, "R": 248, "G": 248, "B": 248, "Tolerance": 10 },
-            //     { "X": 45, "Y": 160, "R": 40,  "G": 40,  "B": 40,  "Tolerance": 10 }
-            //   ]
-            // }
-            string pixelGroupPath = "routes/InBattleMenu.json";
-            if (File.Exists(pixelGroupPath))
-            {
-                PixelGroup group = PixelGroup.Load(pixelGroupPath);
-                bool isMatch = group.Matches(hWnd);
-                Console.WriteLine($"PixelGroup '{group.Name}' matches: {isMatch}");
-
-                if (isMatch)
-                {
-                    // execute whatever logic corresponds to this state
-                }
-            }
             // Example: poll the battle state JSON dumped by BattleDump.lua
             string battleStatePath = "battle_state.json";
             BattleState? battle = BattleState.Load(battleStatePath);
