@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\dAIlga-pixelcalibration\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5AFA5FF6-E289-07CC-EC0A-18D9BE426A57}|dAIlga-pixelcalibration.csproj|c:\\users\\tacoc\\desktop\\hackathon\\d-ai-lga\\dailga-pixelcalibration\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5AFA5FF6-E289-07CC-EC0A-18D9BE426A57}|dAIlga-pixelcalibration.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{5AFA5FF6-E289-07CC-EC0A-18D9BE426A57}|dAIlga-pixelcalibration.csproj|c:\\users\\tacoc\\desktop\\hackathon\\d-ai-lga\\dailga-pixelcalibration\\dailga-pixelcalibration.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
       "RelativeMoniker": "D:0:0:{5AFA5FF6-E289-07CC-EC0A-18D9BE426A57}|dAIlga-pixelcalibration.csproj|solutionrelative:dailga-pixelcalibration.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5AFA5FF6-E289-07CC-EC0A-18D9BE426A57}|dAIlga-pixelcalibration.csproj|c:\\users\\tacoc\\desktop\\hackathon\\d-ai-lga\\dailga-pixelcalibration\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5AFA5FF6-E289-07CC-EC0A-18D9BE426A57}|dAIlga-pixelcalibration.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,11 +18,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "dAIlga-pixelcalibration",
               "DocumentMoniker": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj",
               "RelativeDocumentMoniker": "dAIlga-pixelcalibration.csproj",
@@ -34,7 +34,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\dAIlga-pixelcalibration\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
