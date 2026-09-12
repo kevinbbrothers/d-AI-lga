@@ -8,6 +8,8 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using static aAIlga.Pokemon;
+using PixelChecking;
+using static EmulatorBot.InputSimulator;
 
 
 namespace EmulatorBot
@@ -539,6 +541,30 @@ namespace EmulatorBot
 
         }
 
+        // Battle State Checks
+        public static bool IsActionAvalible()
+        {
+            bool check1 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 680, 12, 12, 12);
+            bool check2 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 800, 12, 12, 12);
+            bool check3 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 740, 12, 12, 12);
+            if(check1 && check2 && check3)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public static bool IsPokemonFainted(int x, int y)
+        {
+            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", x, y, 12, 12, 12))
+            {
+                return true;
+            }
+            return true;
+        }
+
         private static void Main()
         {
             //// Adjust to your emulator window's exact title (check Task Manager / Spy++ if unsure)
@@ -605,7 +631,12 @@ namespace EmulatorBot
             // Loop
             while(true)
             {
-
+                // Check Battle Status
+                if(IsActionAvalible())
+                {
+                    Console.WriteLine("Action avalibility confirmed");
+                    InputSimulator.PressKey(Key.A, 100);
+                }
             }
         }
     }
