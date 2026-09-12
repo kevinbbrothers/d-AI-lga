@@ -161,9 +161,8 @@ namespace EmulatorBot
     }
 
     /// <summary>
-    /// Presses 't' to trigger a Plat_Qol.lua battle snapshot, waits for the new
-    /// BattleSnapshot-##### file to appear in the dumps folder, parses it, and
-    /// deletes it so the next capture can be told apart from this one.
+    /// Presses 't' to trigger a Plat_Qol.lua battle snapshot, waits for the snapshot
+    /// file to (re)appear in the dumps folder, parses it, and deletes it.
     /// </summary>
     public static class BattleSnapshotReader
     {
@@ -173,7 +172,7 @@ namespace EmulatorBot
         };
 
         /// <summary>
-        /// Triggers and reads one battle snapshot. Returns null if no new file
+        /// Triggers and reads one battle snapshot. Returns null if no file
         /// appeared within timeoutMs (e.g. not actually in battle).
         /// </summary>
         public static BattleSnapshot? CaptureSnapshot(
@@ -181,37 +180,41 @@ namespace EmulatorBot
             int timeoutMs = 5000,
             int pollIntervalMs = 100)
         {
-            var existingFiles = Directory.Exists(dumpsDir)
-                ? new HashSet<string>(Directory.GetFiles(dumpsDir, "BattleSnapshot-*"))
-                : new HashSet<string>();
+            // The Lua script writes to a FIXED filename per trainer ID (not a unique name
+            // per press), so any leftover snapshot from a prior capture needs to be cleared
+            // first — otherwise the file "already exists" before we even press T and the
+            // old "wait for a new filename" check never recognizes the fresh overwrite.
+            if (Directory.Exists(dumpsDir))
+            {
+                foreach (string f in Directory.GetFiles(dumpsDir, "BattleSnapshot-*"))
+                    TryDeleteFile(f);
+            }
 
             InputSimulator.PressKey(InputSimulator.Key.T, 100);
 
-            string? newFile = FindNewSnapshotFile(dumpsDir, existingFiles, timeoutMs, pollIntervalMs);
-            if (newFile == null)
+            string? snapshotFile = WaitForSnapshotFile(dumpsDir, timeoutMs, pollIntervalMs);
+            if (snapshotFile == null)
             {
                 Console.WriteLine("Timed out waiting for battle snapshot — are you actually in a battle?");
                 return null;
             }
 
-            BattleSnapshot? snapshot = ReadSnapshotWithRetry(newFile);
-            TryDeleteFile(newFile);
+            BattleSnapshot? snapshot = ReadSnapshotWithRetry(snapshotFile);
+            TryDeleteFile(snapshotFile);
             return snapshot;
         }
 
-        private static string? FindNewSnapshotFile(
-            string dumpsDir, HashSet<string> existingFiles, int timeoutMs, int pollIntervalMs)
+        /// <summary>Waits for any BattleSnapshot-* file to appear (the folder was cleared right before this).</summary>
+        private static string? WaitForSnapshotFile(string dumpsDir, int timeoutMs, int pollIntervalMs)
         {
             var sw = Stopwatch.StartNew();
             while (sw.ElapsedMilliseconds < timeoutMs)
             {
                 if (Directory.Exists(dumpsDir))
                 {
-                    foreach (string f in Directory.GetFiles(dumpsDir, "BattleSnapshot-*"))
-                    {
-                        if (!existingFiles.Contains(f))
-                            return f;
-                    }
+                    string[] files = Directory.GetFiles(dumpsDir, "BattleSnapshot-*");
+                    if (files.Length > 0)
+                        return files[0];
                 }
                 Thread.Sleep(pollIntervalMs);
             }
@@ -479,7 +482,7 @@ namespace EmulatorBot
             if (hWnd == IntPtr.Zero)
             {
                 Console.WriteLine("Emulator window not found. Is it running?");
-               return;
+                return;
             }
 
             if (!WindowCapture.Focus(hWnd))
