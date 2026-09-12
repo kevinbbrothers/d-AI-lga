@@ -63,6 +63,7 @@ namespace EmulatorBot
         /// <summary>Plays back every step in order via InputSimulator.</summary>
         public void Execute()
         {
+            Console.WriteLine("NUGGET -> Running nugget: " + Name);
             foreach (RoutingStep step in Steps)
             {
                 if (!Enum.TryParse<InputSimulator.Key>(step.Key, ignoreCase: true, out var key))
@@ -473,7 +474,7 @@ namespace EmulatorBot
                 Console.WriteLine(
                     $"Error: {Marshal.GetLastWin32Error()}");
             }
-            Console.WriteLine($"Key {(keyDown ? "DOWN" : "UP")} - VK=0x{vk:X2} ({vk})");
+            //Console.WriteLine($"Key {(keyDown ? "DOWN" : "UP")} - VK=0x{vk:X2} ({vk})");
         }
 
         /// <summary>Press and release a key, holding for durationMs (default one emulator "tap").</summary>
@@ -572,7 +573,7 @@ namespace EmulatorBot
         }
         public static bool IsActivePokemonFainted()
         {
-            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 640, 730, 99, 80, 130))
+            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 640, 730, 99, 84, 130))
             {
                 return true;
             }
@@ -581,7 +582,7 @@ namespace EmulatorBot
 
         public static int FirstNonFaintedPokemon()
         {
-            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 730, 82, 141, 189))
+            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 640, 730, 82, 141, 189))
             {
                 Console.WriteLine("FAINT -> Active Pokemon is not fainted");
                 return 1;
@@ -658,6 +659,7 @@ namespace EmulatorBot
 
                 case 1:
                     InputSimulator.PressKey(InputSimulator.Key.B, 100);
+                    Console.WriteLine("FAINT -> Overriding Switch");
                     PerformAction(false);
                     break;
 
