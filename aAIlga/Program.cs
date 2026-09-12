@@ -7,6 +7,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
+using static aAIlga.Pokemon;
 
 
 namespace EmulatorBot
@@ -474,16 +475,16 @@ namespace EmulatorBot
         private static void Main()
         {
             //// Adjust to your emulator window's exact title (check Task Manager / Spy++ if unsure)
-            //IntPtr hWnd = WindowCapture.FindEmulatorWindow("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum");
-            //if (hWnd == IntPtr.Zero)
-            //{
-            //    Console.WriteLine("Emulator window not found. Is it running?");
-            //    return;
-            //}
+            IntPtr hWnd = WindowCapture.FindEmulatorWindow("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum");
+            if (hWnd == IntPtr.Zero)
+            {
+                Console.WriteLine("Emulator window not found. Is it running?");
+               return;
+            }
 
-            //if (!WindowCapture.Focus(hWnd))
-            //    Console.WriteLine("Warning: could not confirm emulator window has focus. Click it manually and re-run.");
-            //Thread.Sleep(300); // let focus settle before sending input
+            if (!WindowCapture.Focus(hWnd))
+                Console.WriteLine("Warning: could not confirm emulator window has focus. Click it manually and re-run.");
+            Thread.Sleep(300); // let focus settle before sending input
 
             //// Example: load and play a routing nugget
             //// JSON format:
@@ -536,47 +537,31 @@ namespace EmulatorBot
 
 
             // Create your Pokémon
-            Pokemon myPokemon = new Pokemon
+            BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot(@"C:\Users\tacoc\Desktop\dumps");
+
+            if (snapshot == null)
             {
-                Name = "Infernape",
-                Type1 = "Fire",
-                Type2 = "Fighting",
-                HP = 2,
-                Moves = new List<Move>
-            {
-                new Move { Name = "Flamethrower", Type = "Fire", Power = 90 },
-                new Move { Name = "Close Combat", Type = "Fighting", Power = 120 },
-                new Move { Name = "Grass Knot", Type = "Grass", Power = 80 },
-                new Move { Name = "U-turn", Type = "Bug", Power = 70 }
+                Console.WriteLine("No snapshot available.");
+                return;
             }
-            };
 
-            Pokemon opponentPokemon = new Pokemon
-            {
-                Name = "Empoleon",
-                Type1 = "Water",
-                Type2 = "Steel",
-                HP = 100,
-                Moves = new List<Move>
-            {
-                new Move { Name = "Surf", Type = "Fire", Power = 90 },
-                new Move { Name = "Ice Beam", Type = "Ice", Power = 90 },
-                new Move { Name = "Flash Cannon", Type = "Steel", Power = 80 },
-                new Move { Name = "Aqua Jet", Type = "Fire", Power = 40 }
-            }
-            };
+            // Build Pokémon objects automatically using your constructor
+            Pokemon myMon = new Pokemon(snapshot.PlayerActive[0]);
+            Pokemon oppMon = new Pokemon(snapshot.TrainerActive[0]);
 
-            // Use the BattleLogic class
-            int action = BattleLogic.ChooseAction(myPokemon, opponentPokemon);
+            // Decide what to do
+            int action = BattleLogic.ChooseAction(myMon, oppMon);
 
-            // Interpret the result
+            // Act on the decision
             if (action == 5)
             {
-                Console.WriteLine("Switch!");
+                Console.WriteLine("Switching Pokémon...");
+                //InputSimulator.PressKey(InputSimulator.Key.B);   // example switch input
             }
             else
             {
-                Console.WriteLine($"Use move #{action}: {myPokemon.Moves[action - 1].Name}");
+                Console.WriteLine($"Using move #{action}: {myMon.Moves[action - 1].Name}");
+                //InputSimulator.PressKey(InputSimulator.Key.A);   // example "use move" input
             }
         }
     }

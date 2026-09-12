@@ -22,9 +22,10 @@ namespace aAIlga
         public string Type2;
         public int HP;
         public List<Move> Moves = new();
-    }
 
-    public Pokemon(ActiveBattler battler)
+        public Pokemon() { }
+
+        public Pokemon(ActiveBattler battler)
         {
             Name = battler.Species;
             HP = battler.CurrentHp;
@@ -46,16 +47,18 @@ namespace aAIlga
             // Convert moves from snapshot → Move objects
             foreach (string moveName in battler.Moves)
             {
-                if (moveName == "--") continue;
+                if (moveName == "--")
+                    continue;
 
                 MoveData.MoveInfo? moveInfo = MoveData.GetMove(moveName);
+
                 if (moveInfo != null)
                 {
                     Moves.Add(new Move
                     {
-                        Name = moveInfo.Name,
-                        Type = moveInfo.Type,
-                        Power = moveInfo.Power
+                        Name = moveInfo.Value.Name,
+                        Type = moveInfo.Value.Type.ToString(),
+                        Power = moveInfo.Value.Power
                     });
                 }
                 else
@@ -69,6 +72,10 @@ namespace aAIlga
                 }
             }
         }
+    }
+
+
+
 
     public class BattleLogic
     {
