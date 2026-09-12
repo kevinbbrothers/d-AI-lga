@@ -556,13 +556,18 @@ namespace EmulatorBot
                 return false;
             }
         }
-        public static bool IsPokemonFainted(int x, int y)
+        public static bool IsActivePokemonFainted()
         {
-            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", x, y, 12, 12, 12))
+            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 640, 730, 99, 80, 130))
             {
                 return true;
             }
-            return true;
+            return false;
+        }
+
+        public static void SelectFirstAvaliblePokemon()
+        {
+            
         }
 
         private static void Main()
@@ -634,8 +639,13 @@ namespace EmulatorBot
                 // Check Battle Status
                 if(IsActionAvalible())
                 {
-                    Console.WriteLine("Action avalibility confirmed");
-                    InputSimulator.PressKey(Key.A, 100);
+                    Console.WriteLine("ACTION -> Confirmed able to perform action");
+                    PerformAction();
+                }
+                // Check if the active pokemon has fainted and needs to switch
+                if(IsActivePokemonFainted())
+                {
+                    Console.WriteLine("FAINT -> The active pokemon has fainted and will need to switch");
                 }
             }
         }
