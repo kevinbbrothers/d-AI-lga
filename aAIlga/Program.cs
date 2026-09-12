@@ -150,6 +150,28 @@ namespace EmulatorBot
 
         private const uint MAPVK_VK_TO_VSC = 0;
 
+        //[StructLayout(LayoutKind.Sequential)]
+        //private struct INPUT
+        //{
+        //    public uint type;
+        //    public InputUnion U;
+        //}   
+
+        //[StructLayout(LayoutKind.Explicit)]
+        //private struct InputUnion
+        //{
+        //    [FieldOffset(0)] public KEYBDINPUT ki;
+        //}
+
+        //[StructLayout(LayoutKind.Sequential)]
+        //private struct KEYBDINPUT
+        //{
+        //    public ushort wVk;
+        //    public ushort wScan;
+        //    public uint dwFlags;
+        //    public uint time;
+        //    public IntPtr dwExtraInfo;
+        //}
         [StructLayout(LayoutKind.Sequential)]
         private struct INPUT
         {
@@ -160,7 +182,14 @@ namespace EmulatorBot
         [StructLayout(LayoutKind.Explicit)]
         private struct InputUnion
         {
-            [FieldOffset(0)] public KEYBDINPUT ki;
+            [FieldOffset(0)]
+            public MOUSEINPUT mi;
+
+            [FieldOffset(0)]
+            public KEYBDINPUT ki;
+
+            [FieldOffset(0)]
+            public HARDWAREINPUT hi;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -173,6 +202,24 @@ namespace EmulatorBot
             public IntPtr dwExtraInfo;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MOUSEINPUT
+        {
+            public int dx;
+            public int dy;
+            public uint mouseData;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct HARDWAREINPUT
+        {
+            public uint uMsg;
+            public ushort wParamL;
+            public ushort wParamH;
+        }
         private const uint INPUT_KEYBOARD = 1;
         private const uint KEYEVENTF_KEYUP = 0x0002;
         private const uint KEYEVENTF_SCANCODE = 0x0008;
@@ -219,7 +266,17 @@ namespace EmulatorBot
                     }
                 }
             };
-            SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
+            uint result = SendInput(
+                        1,
+                        new[] { input },
+                        Marshal.SizeOf<INPUT>());
+
+            if (result == 0)
+            {
+                Console.WriteLine(
+                    $"Error: {Marshal.GetLastWin32Error()}");
+            }
+            Console.WriteLine($"Key {(keyDown ? "DOWN" : "UP")} - VK=0x{vk:X2} ({vk})");
         }
 
         /// <summary>Press and release a key, holding for durationMs (default one emulator "tap").</summary>
@@ -255,6 +312,7 @@ namespace EmulatorBot
             // Example: move right, then read a pixel (e.g. an HP bar sample point)
             InputSimulator.PressKey(InputSimulator.Key.Right, 150);
             Thread.Sleep(200); // let the frame update
+            
 
             Color pixel = WindowCapture.GetPixel(hWnd, 120, 45);
             Console.WriteLine($"Pixel at (120,45): R={pixel.R} G={pixel.G} B={pixel.B}");
@@ -286,6 +344,12 @@ namespace EmulatorBot
                 Console.WriteLine($"Playing nugget: {nugget.Name} ({nugget.Steps.Count} steps)");
                 nugget.Execute();
             }
+            else
+            {
+                Console.WriteLine("File Not Found");
+            }
+
+            
         }
     }
 }
