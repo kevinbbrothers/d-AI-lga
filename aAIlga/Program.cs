@@ -9,7 +9,7 @@ using System.Text.Json;
 using System.Threading;
 using dAIlga;
 
-namespace dAIlga
+namespace EmulatorBot
 {
     /// <summary>A single step: which key, how long to hold it, and how long to wait after.</summary>
     public class RoutingStep
@@ -350,6 +350,18 @@ namespace dAIlga
                 PokemonTypeInfo? typeInfo = PokemonTypes.GetTypes(mon.Species);
                 string typeText = typeInfo?.ToString() ?? "Unknown";
                 Console.WriteLine($"{label}: {mon.Species} ({typeText}) — HP: {mon.CurrentHp}");
+
+                foreach (string moveName in mon.Moves)
+                {
+                    if (moveName == "--")
+                        continue;
+
+                    MoveData.MoveInfo? move = MoveData.GetMove(moveName);
+                    if (move is { } m)
+                        Console.WriteLine($"    - {m.Name} ({m.Type}, {m.Power} power)");
+                    else
+                        Console.WriteLine($"    - {moveName} (unknown move)");
+                }
             }
         }
     }
