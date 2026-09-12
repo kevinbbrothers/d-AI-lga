@@ -31,7 +31,7 @@ namespace dAIlga
     /// </summary>
     public static class PokemonTypes
     {
-        private static readonly PokemonTypeInfo?[] ById = new PokemonTypeInfo?[494];
+        private static readonly PokemonTypeInfo?[] ById = new PokemonTypeInfo?[495];
         private static readonly Dictionary<string, PokemonTypeInfo> ByName =
             new(StringComparer.OrdinalIgnoreCase);
 
@@ -46,9 +46,9 @@ namespace dAIlga
         public static PokemonTypeInfo? GetTypes(string speciesName) =>
             ByName.TryGetValue(speciesName, out var info) ? info : null;
 
-        /// <summary>Look up by National Dex number (1-493). Returns null if out of range.</summary>
+        /// <summary>Look up by National Dex number (1-494, where 494 = "None"). Returns null if out of range.</summary>
         public static PokemonTypeInfo? GetTypes(int speciesId) =>
-            (speciesId >= 1 && speciesId <= 493) ? ById[speciesId] : null;
+            (speciesId >= 1 && speciesId <= 495) ? ById[speciesId] : null;
 
         static PokemonTypes()
         {
@@ -552,7 +552,7 @@ namespace dAIlga
             Add(491, "Darkrai", PokemonType.Dark);
             Add(492, "Shaymin", PokemonType.Grass); // Land Forme
             Add(493, "Arceus", PokemonType.Normal); // base form (Plate changes it)
-            Add(494, "None", PokemonType.Normal);
+            Add(494, "None", PokemonType.Normal); // base form (Plate changes it)
         }
     }
 }
