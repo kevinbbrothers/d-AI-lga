@@ -177,7 +177,7 @@ namespace EmulatorBot
         /// </summary>
         public static BattleSnapshot? CaptureSnapshot(
             string dumpsDir = @"C:\Users\tacoc\Desktop\dumps",
-            int timeoutMs = 5000,
+            int timeoutMs = 10000,
             int pollIntervalMs = 100)
         {
             // The Lua script writes to a FIXED filename per trainer ID (not a unique name
@@ -201,6 +201,9 @@ namespace EmulatorBot
 
             BattleSnapshot? snapshot = ReadSnapshotWithRetry(snapshotFile);
             TryDeleteFile(snapshotFile);
+
+            Thread.Sleep(1000);
+
             return snapshot;
         }
 
@@ -473,8 +476,32 @@ namespace EmulatorBot
         public static void ReleaseKey(Key key) => SendKeyEvent((ushort)key, false);
     }
 
+    
+   
     internal class Program
     {
+        public static int GetAction()
+        {
+            // Create your Pokémon
+            BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot(@"C:\Users\tacoc\Desktop\dumps");
+
+            if (snapshot == null)
+            {
+                Console.WriteLine("No snapshot available.");
+                return 0;
+            }
+
+            // Build Pokémon objects automatically using your constructor
+            Pokemon myMon = new Pokemon(snapshot.PlayerActive[0]);
+            Pokemon oppMon = new Pokemon(snapshot.TrainerActive[0]);
+
+            // Decide what to do
+            int action = BattleLogic.ChooseAction(myMon, oppMon);
+            Console.WriteLine(action);
+
+            return action;
+        }
+
         private static void Main()
         {
             //// Adjust to your emulator window's exact title (check Task Manager / Spy++ if unsure)
@@ -539,33 +566,40 @@ namespace EmulatorBot
             ///
 
 
-            // Create your Pokémon
-            BattleSnapshot? snapshot = BattleSnapshotReader.CaptureSnapshot(@"C:\Users\tacoc\Desktop\dumps");
 
-            if (snapshot == null)
+            int action = GetAction();
+
+            switch (action)
             {
-                Console.WriteLine("No snapshot available.");
-                return;
-            }
+                case 1:
+                    string nuggetPath1 = "routes/Move1.json";                   
+                    RoutingNugget nugget1 = RoutingNugget.Load(nuggetPath1);
+                    nugget1.Execute();
+                    break;
 
-            // Build Pokémon objects automatically using your constructor
-            Pokemon myMon = new Pokemon(snapshot.PlayerActive[0]);
-            Pokemon oppMon = new Pokemon(snapshot.TrainerActive[0]);
+                case 2:
+                    string nuggetPath2 = "routes/Move2.json";
+                    RoutingNugget nugget2 = RoutingNugget.Load(nuggetPath2);
+                    nugget2.Execute();
+                    break;
 
-            // Decide what to do
-            int action = BattleLogic.ChooseAction(myMon, oppMon);
+                case 3:
+                    string nuggetPath3 = "routes/Move3.json";
+                    RoutingNugget nugget3 = RoutingNugget.Load(nuggetPath3);
+                    nugget3.Execute();
+                    break;
 
-            // Act on the decision
-            if (action == 5)
-            {
-                Console.WriteLine("Switching Pokémon...");
-                //InputSimulator.PressKey(InputSimulator.Key.B);   // example switch input
+                case 4:
+                    string nuggetPath4 = "routes/Move4.json";
+                    RoutingNugget nugget4 = RoutingNugget.Load(nuggetPath4);
+                    nugget4.Execute();
+                    break;
+
+                default:
+                    Console.WriteLine("Switch");
+                    break;
             }
-            else
-            {
-                Console.WriteLine($"Using move #{action}: {myMon.Moves[action - 1].Name}");
-                //InputSimulator.PressKey(InputSimulator.Key.A);   // example "use move" input
-            }
+            
         }
     }
 }

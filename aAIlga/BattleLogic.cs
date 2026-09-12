@@ -30,6 +30,7 @@ namespace aAIlga
             Name = battler.Species;
             HP = battler.CurrentHp;
 
+            Console.WriteLine(Name);
             // Lookup typing using your PokemonTypes class
             PokemonTypeInfo? typeInfo = PokemonTypes.GetTypes(battler.Species);
 

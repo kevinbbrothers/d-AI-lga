@@ -1,0 +1,8 @@
+{
+   "Name": "Move1",
+   "Steps": [
+     { "Key": "Up", "DurationMs": 200, "DelayAfterMs": 1000 },
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 1000 },
+     { "Key": "A", "DurationMs": 200, "DelayAfterMs": 1000 }
+   ]
+}
