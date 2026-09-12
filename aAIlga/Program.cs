@@ -579,32 +579,32 @@ namespace EmulatorBot
 
         public static int FirstNonFaintedPokemon()
         {
-            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 730, 165, 140, 119))
+            if(PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 730, 82, 141, 189))
             {
                 Console.WriteLine("FAINT -> Active Pokemon is not fainted");
                 return 1;
             }
-            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 650, 165, 140, 119))
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 650, 82, 141, 189))
             {
                 Console.WriteLine("FAINT -> 2nd Pokemon is not fainted, selecting...");
                 return 2;
             }
-            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 750, 165, 140, 119))
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 750, 82, 141, 189))
             {
                 Console.WriteLine("FAINT -> 3rd Pokemon is not fainted, selecting...");
                 return 3;
             }
-            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 780, 165, 140, 119))
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 780, 82, 141, 189))
             {
                 Console.WriteLine("FAINT -> 4th Pokemon is not fainted, selecting...");
                 return 4;
             }
-            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 860, 165, 140, 119))
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 725, 860, 82, 141, 189))
             {
                 Console.WriteLine("FAINT -> 5th Pokemon is not fainted, selecting...");
                 return 5;
             }
-            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 900, 165, 140, 119))
+            else if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1040, 900, 82, 141, 189))
             {
                 Console.WriteLine("FAINT -> 6th Pokemon is not fainted, selecting...");
                 return 6;
@@ -720,7 +720,7 @@ namespace EmulatorBot
             while(true)
             {
                 // Check Battle Status
-                if(IsActionAvalible())
+                if (IsActionAvalible())
                 {
                     Console.WriteLine("ACTION -> Confirmed able to perform action");
                     PerformAction();
@@ -731,6 +731,11 @@ namespace EmulatorBot
                     Console.WriteLine("FAINT -> The active pokemon has fainted and will need to switch");
                     Console.WriteLine(FirstNonFaintedPokemon());
                     //SelectFirstAvaliblePokemon();
+                }
+                // Skip text window
+                if (PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 1260, 500, 115, 140, 189))
+                {
+                    InputSimulator.PressKey(InputSimulator.Key.B, 100);
                 }
             }
         }
