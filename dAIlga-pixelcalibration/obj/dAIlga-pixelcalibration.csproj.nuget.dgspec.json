@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj": {}
+    "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj": {}
   },
   "projects": {
-    "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj": {
+    "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj",
+        "projectUniqueName": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj",
         "projectName": "dAIlga-pixelcalibration",
-        "projectPath": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj",
-        "packagesPath": "C:\\Users\\kevin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\kevin\\Documents\\Programming\\C#\\d-AI-lga\\dAIlga-pixelcalibration\\obj\\",
+        "projectPath": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\dAIlga-pixelcalibration\\dAIlga-pixelcalibration.csproj",
+        "packagesPath": "C:\\Users\\tacoc\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\tacoc\\Desktop\\Hackathon\\d-AI-lga\\dAIlga-pixelcalibration\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\kevin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\tacoc\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -44,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0-windows7.0": {
@@ -74,7 +74,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

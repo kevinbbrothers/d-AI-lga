@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("dAIlga-pixelcalibration")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6d893a001237d6fb40c8708f815c8b96fbe6a86b")]
 [assembly: System.Reflection.AssemblyProductAttribute("dAIlga-pixelcalibration")]
 [assembly: System.Reflection.AssemblyTitleAttribute("dAIlga-pixelcalibration")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

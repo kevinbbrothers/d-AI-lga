@@ -544,9 +544,9 @@ namespace EmulatorBot
         // Battle State Checks
         public static bool IsActionAvalible()
         {
-            bool check1 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 680, 12, 12, 12);
-            bool check2 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 800, 12, 12, 12);
-            bool check3 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 740, 12, 12, 12);
+            bool check3 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 740, 239, 57, 57);
+            bool check1 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 680, 239, 57, 57);
+            bool check2 = PixelChecking.PixelChecker.CheckPixel("DeSmuME 0.9.13 x64 SSE2 | Pokémon Platinum", 800, 800, 239, 57, 57);
             if(check1 && check2 && check3)
             {
                 return true;
